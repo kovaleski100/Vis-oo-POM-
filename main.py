@@ -31,6 +31,8 @@ def contourVoting(luminances, normals, N):
 	return phij;
 
 img = cv2.imread('test.png')
+lum = [pixel[0]*0.3 + pixel[1]*0.59 + pixel[2]*0.11 for row in img for pixel in row]
+
 mask = np.zeros(img.shape[:2],np.uint8)
 
 bgdModel = np.zeros((1,65),np.float64)
