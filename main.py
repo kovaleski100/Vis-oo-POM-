@@ -11,6 +11,7 @@ def contourVoting(luminances, normals, N):
 	lumSort = np.array([(luminances[i], i) for i in range(len(luminances))])
 	lumSort = np.sort(lumSort, axis=0)
 	lumSort = lumSort[::-1]
+	np.random.seed(5)
 	phij = np.random.rand(N)*2*math.pi
 	alphaAcc = np.zeros(N) # fix this variable
 	kid = 0.5 			   # surface coefficient
@@ -92,13 +93,15 @@ def findZenithAngle(angle, img, h, w):
 
 
 
-realImg = cv2.imread('a.png')
+#realImg = cv2.imread('gato.jpg') #gato
+realImg = cv2.imread('a.png')	 #leao
 h, w = realImg.shape[:2]
 
 gray = cv2.cvtColor(realImg, cv2.COLOR_BGR2GRAY)
 a, newImg = cv2.threshold(gray,0,255,cv2.THRESH_BINARY)
 newImg[:] = 0
 
+#pt = [(177, 300)]
 pt = [(116, 130)]
 du = [-1, 0, 1, -1, 0, 1, -1, 0, 1]
 dv = [-1, -1, -1, 0, 0, 0, 1, 1, 1]
@@ -172,7 +175,8 @@ dict = {
 	(1, 1, 1, 1, 1, 1, 1, 0, 1): (0, 0, -1),
 	(1, 1, 0, 1, 1, 0, 1, 1, 0): (0, 1, 0),
 	(1, 1, 1, 1, 1, 0, 1, 1, 0): (0, 1, 0),
-	(1, 1, 0, 1, 1, 0, 1, 0, 0): (0, 1, 0)
+	(1, 1, 0, 1, 1, 0, 1, 0, 0): (0, 1, 0),
+	(0, 0, 1, 0, 1, 1, 0, 0, 1): (0, -1, 0)
 }
 lum = []
 
@@ -183,9 +187,14 @@ for u in range(h):
 			for i in range(len(du)):
 				nu = u + du[i]
 				nv = v + dv[i]
-				number[i] = 1 if newImg[nu][nv] > 0 else 0
+				if(nu > 0 and nu < h and nv > 0 and nv < w):
+					number[i] = 1 if newImg[nu][nv] > 0 else 0
 			lum.append(realImg[u][v][0]*0.11 + realImg[u][v][1]*0.59 + realImg[u][v][2]*0.3)
-			normals.append((dict[tuple(number)])/np.linalg.norm(dict[tuple(number)]))
+			if(tuple(number) in dict.keys()):
+				normals.append((dict[tuple(number)])/np.linalg.norm(dict[tuple(number)]))
+			else:
+				alpha = np.random.rand(1)*2*math.pi
+				normals.append((0, math.cos(alpha), math.sin(alpha)))
 
 lum = np.array(lum)
 normals = np.array(normals)
@@ -204,4 +213,5 @@ omegaAngles = [180.0/math.pi*x for x in omegaj]
 
 print(omegaAngles, zenithAngles)
 
+#plt.imshow(realImg), plt.show()
 cv2.imshow("name", andImg), cv2.waitKey(0), cv2.destroyAllWindows()
