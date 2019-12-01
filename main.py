@@ -53,8 +53,8 @@ newImg[:] = 0
 
 
 pt = [(116, 130), (59, 84)]
-du = [0, 0, 1, 1, 1, -1, -1, -1]
-dv = [1, -1, 0, 1, -1, 0, 1, -1]
+du = [-1, 0, 1, -1, 0, 1, -1, 0, 1]
+dv = [-1, -1, -1, 0, 0, 0, 1, 1, 1]
 
 seen = np.zeros((h, w), dtype=np.int32)
 
@@ -74,12 +74,44 @@ for (x, y) in pt:
 				queue.append((nu, nv))
 	
 
-newImg = cv2.Canny(newImg,100,200)
+edge = cv2.Canny(newImg,100,200)
 
-cv2.imshow("Converted Image",newImg)
+normals = []
+
+dict = {
+	(0, 1, 0, 0, 1, 0, 0, 0, 0): (0, 0, -1),
+	(0, 0, 0, 1, 1, 0, 0, 0, 0): (0, 1, 0),
+	(0, 0, 0, 0, 1, 1, 0, 0, 0): (0, -1, 0),
+	(0, 0, 0, 0, 1, 0, 0, 1, 0): (0, 0, 1),
+	(1, 0, 0, 0, 1, 0, 0, 0, 0): (0, 1, -1),
+	(0, 0, 1, 0, 1, 0, 0, 0, 0): (0, -1, -1),
+	(0, 0, 0, 0, 1, 0, 1, 0, 0): (0, 1, 1),
+	(0, 0, 0, 0, 1, 0, 0, 0, 1): (0, -1, 1),
+	(1, 1, 0, 1, 1, 0, 0, 0, 0): (0, 1, -1),
+	(0, 1, 1, 0, 1, 1, 0, 0, 0): (0, -1, -1),
+	(0, 0, 0, 1, 1, 0, 1, 1, 0): (0, 1, 1),
+	(0, 0, 0, 0, 1, 1, 0, 1, 1): (0, -1, 1)
+}
+
+for u in range(h):
+	for v in range(w):
+		if(edge[u][v] > 0):
+			number = [0]*9
+			print(edge[u][v], newImg[u][v])
+			for i in range(len(du)):
+				nu = u + du[i]
+				nv = v + dv[i]
+				number[i] = 1 if newImg[u][v] > 0 else 0
+			#normals.append(dict[tuple(number)])
+			
+			
+
+plt.imshow(newImg), plt.show()
+plt.imshow(edge), plt.show()
+'''cv2.imshow("Converted Image", newImg)
 
 # waiting for key event
 cv2.waitKey(0)
 
 # destroying all windows
-cv2.destroyAllWindows()
+cv2.destroyAllWindows()'''
