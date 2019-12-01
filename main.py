@@ -13,16 +13,18 @@ def contourVoting(luminances, normals, N):
 	kid = 0.5  			   # surface coefficient
 	EPS = 1e-6
 	running = True
+	wj = np.array([0, math.sin(phij[0]), math.cos(phij[0])])
 	while(running):
 		for (_, i) in lumSort:
+			i = int(i)
 			omegaAcc = 0
 			for j in range(N):
-				wj = np.tranpose(np.array([0, sin(phij[j]), cos(phij[j])]))
+				wj = np.array([0, math.sin(phij[j]), math.cos(phij[j])])
 				omegaAcc += kid*max(0, np.dot(normals[i], wj))
 			running = False
 			for j in range(N):
-				wj = np.tranpose(np.array([0, sin(phij[j]), cos(phij[j])]))
-				alphaij = luminances[i]*max(0, np.dot(normals[i], wj))/omegaAcc
+				wj = np.array([0, math.sin(phij[j]), math.cos(phij[j])])
+				alphaij = luminances[i]*max(0, np.dot(normals[i], wj))/omegaAcc + EPS
 				lastphij = phij[j]
 				phij[j] = alphaAcc[j]*phij[j] + alphaij*azimuth[i]
 				alphaAcc[j] = alphaAcc[j] + alphaij
@@ -129,19 +131,19 @@ for u in range(h):
 	for v in range(w):
 		if(edge[u][v] > 0):
 			number = [0]*9
-			number2 = [0]*9
 			for i in range(len(du)):
 				nu = u + du[i]
 				nv = v + dv[i]
 				number[i] = 1 if newImg[nu][nv] > 0 else 0
 			normals.append(dict[tuple(number)])
-			
+
+normals = np.array(normals)
 ans = contourVoting(lum, normals, 3)
 
 print(ans)
 
-plt.imshow(newImg), plt.show()
-plt.imshow(edge), plt.show()
+'''plt.imshow(newImg), plt.show()
+plt.imshow(edge), plt.show()'''
 '''cv2.imshow("Converted Image", newImg)
 
 # waiting for key event
