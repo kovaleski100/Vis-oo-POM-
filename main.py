@@ -59,7 +59,6 @@ def findZenithAngle(angle, img, h, w):
 		pixel[0] = 0
 		pixel[1] = int(round((newAngle-7*math.pi/4)/(9*math.pi/4-7*math.pi/4)*(w-1)))
 	grayValue = -1
-	print(pixel)
 	newAngle = angle + math.pi/2 if angle + math.pi/2 <= 2*math.pi else angle + math.pi/2 - 2*math.pi
 	du = math.sin(newAngle)
 	dv = math.cos(newAngle)
@@ -67,23 +66,34 @@ def findZenithAngle(angle, img, h, w):
 		pixel = [round(pixel[0] + du), round(pixel[1] + dv)]
 		if(pixel[0] < 0 or pixel[0] >= h or pixel[1] < 0 or pixel[1] >= w):
 			break
-	print(pixel)
-	
+	nextPixel = [round(pixel[0] + du), round(pixel[1] + dv)]
+	zenith = math.pi/2
+	if(nextPixel[0] >= 0 or nextPixel[0] < h or nextPixel[1] >= 0 or nextPixel[1] < w):
+		derivative = int(int(img[nextPixel[0]][nextPixel[1]]) - int(img[pixel[0]][pixel[1]]))
+		if(derivative > 0):			# if case 1
+			while(derivative > 0):
+				pixel = nextPixel
+				nextPixel = [round(pixel[0] + du), round(pixel[1] + dv)]
+				if(nextPixel[0] >= 0 or nextPixel[0] < h or nextPixel[1] >= 0 or nextPixel[1] < w):
+					derivative = int(int(img[nextPixel[0]][nextPixel[1]]) - int(img[pixel[0]][pixel[1]]))
+				else:
+					derivative = -1
+			zenith = math.pi/2        # should be the normal of the current pixel "pixel", but ...?
+		elif (derivative < 0):					   # else case 2
+			while(derivative < 0 or img[nextPixel[0]][nextPixel[1]] > 0):
+				pixel = nextPixel
+				nextPixel = [round(pixel[0] + du), round(pixel[1] + dv)]
+				if(nextPixel[0] >= 0 or nextPixel[0] < h or nextPixel[1] >= 0 or nextPixel[1] < w):
+					derivative = int(int(img[nextPixel[0]][nextPixel[1]]) - int(img[pixel[0]][pixel[1]]))
+				else:
+					derivative = 1
+			zenith = 3*math.pi/2		 # should be the normal of the current pixel "pixel" but ...?
+	return zenith
+
+
 
 realImg = cv2.imread('a.png')
 h, w = realImg.shape[:2]
-
-'''img = cv2.imread('a.png')
-mask = np.zeros(img.shape[:2],np.uint8)
-
-bgdModel = np.zeros((1,65),np.float64)
-fgdModel = np.zeros((1,65),np.float64)
-
-rect = (0,0,w-1,h-1)
-cv2.grabCut(img,mask,rect,bgdModel,fgdModel,5,cv2.GC_INIT_WITH_RECT)
-
-mask2 = np.where((mask==2)|(mask==0),0,1).astype('uint8')
-img = img*mask2[:,:,np.newaxis]'''
 
 gray = cv2.cvtColor(realImg, cv2.COLOR_BGR2GRAY)
 a, newImg = cv2.threshold(gray,0,255,cv2.THRESH_BINARY)
@@ -184,18 +194,14 @@ andImg = copy.deepcopy(newImg[:])
 andImg[andImg > 0] = 1
 andImg = gray*andImg
 
+zenithAngles = []
+
 for azimuth in omegaj:
 	zenith = findZenithAngle(azimuth, andImg, h, w)
-ans = [180.0/math.pi*x for x in omegaj]
+	zenithAngles.append(zenith)
 
-print(ans)
+omegaAngles = [180.0/math.pi*x for x in omegaj]
 
-plt.imshow(andImg), plt.show()
-'''
-cv2.imshow("Converted Image", andImg)
+print(omegaAngles, zenithAngles)
 
-# waiting for key event
-cv2.waitKey(0)
-
-# destroying all windows
-cv2.destroyAllWindows()'''
+cv2.imshow("name", andImg), cv2.waitKey(0), cv2.destroyAllWindows()
