@@ -5,13 +5,16 @@ from matplotlib import pyplot as plt
 import copy
 
 def contourVoting(luminances, normals, N):
+
 	azimuth = np.array([math.atan2(y, z) if math.atan2(y, z) >= 0.0 else 2*math.pi+math.atan2(y, z) for (x, y, z) in normals])
+
 	lumSort = np.array([(luminances[i], i) for i in range(len(luminances))])
 	lumSort = np.sort(lumSort, axis=0)
-	phij = np.random.rand(N)*360.0
+	lumSort = lumSort[::-1]
+	phij = np.random.rand(N)*2*math.pi
 	alphaAcc = np.zeros(N) # fix this variable
-	kid = 0.5  			   # surface coefficient
-	EPS = 1e-6
+	kid = 0.5 			   # surface coefficient
+	EPS = 1e-3
 	running = True
 	wj = np.array([0, math.sin(phij[0]), math.cos(phij[0])])
 	while(running):
@@ -24,16 +27,22 @@ def contourVoting(luminances, normals, N):
 			running = False
 			for j in range(N):
 				wj = np.array([0, math.sin(phij[j]), math.cos(phij[j])])
-				alphaij = luminances[i]*max(0, np.dot(normals[i], wj))/omegaAcc
+				if(abs(omegaAcc) > EPS):
+					alphaij = luminances[i]*max(0, np.dot(normals[i], wj))/omegaAcc
+				else:
+					alphaij = 5
 				lastphij = phij[j]
 				phij[j] = alphaAcc[j]*phij[j] + alphaij*azimuth[i]
 				alphaAcc[j] = alphaAcc[j] + alphaij
-				phij[j] = phij[j]/alphaAcc[j]
+				if(abs(alphaAcc[j]) > EPS):
+					phij[j] = phij[j]/alphaAcc[j]
+				else:
+					phij[j] = 5.0
 				if(abs(phij[j] - lastphij) > EPS):
 					running = True
-	return phij;
+	return phij
 
-realImg = cv2.imread('a.png')
+realImg = cv2.imread('t1.jpg')
 h, w = realImg.shape[:2]
 
 '''img = cv2.imread('a.png')
@@ -53,7 +62,7 @@ a, gray = cv2.threshold(gray,0,255,cv2.THRESH_BINARY)
 newImg = copy.deepcopy(gray)
 newImg[:] = 0
 
-pt = [(116, 130), (59, 84)]
+pt = [(116, 130)]
 du = [-1, 0, 1, -1, 0, 1, -1, 0, 1]
 dv = [-1, -1, -1, 0, 0, 0, 1, 1, 1]
 
@@ -137,17 +146,17 @@ for u in range(h):
 				nv = v + dv[i]
 				number[i] = 1 if newImg[nu][nv] > 0 else 0
 			lum.append(realImg[u][v][0]*0.11 + realImg[u][v][1]*0.59 + realImg[u][v][2]*0.3)
-			normals.append(dict[tuple(number)])
+			normals.append((dict[tuple(number)])/np.linalg.norm(dict[tuple(number)]))
 
 lum = np.array(lum)
 normals = np.array(normals)
-ans = contourVoting(lum, normals, 3)
 
+ans = contourVoting(lum, normals, 3)
 print(ans)
 
 '''plt.imshow(newImg), plt.show()
-plt.imshow(edge), plt.show()'''
-'''cv2.imshow("Converted Image", newImg)
+plt.imshow(edge), plt.show()
+cv2.imshow("Converted Image", newImg)
 
 # waiting for key event
 cv2.waitKey(0)
