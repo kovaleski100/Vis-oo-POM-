@@ -102,116 +102,134 @@ a, newImg = cv2.threshold(gray,0,255,cv2.THRESH_BINARY)
 newImg[:] = 0
 
 #pt = [(177, 300)]
-pt = [(116, 130)]
-du = [-1, 0, 1, -1, 0, 1, -1, 0, 1]
-dv = [-1, -1, -1, 0, 0, 0, 1, 1, 1]
 
-seen = np.zeros((h, w), dtype=np.int32)
+pt = []
 
-edge = copy.deepcopy(newImg)
+def mouse_callback(event, x, y, flags, params):
+	if event == 1:
+		pt.append((x,y))
+		print(pt)
+		du = [-1, 0, 1, -1, 0, 1, -1, 0, 1]
+		dv = [-1, -1, -1, 0, 0, 0, 1, 1, 1]
 
-for (x, y) in pt:
-	queue = [(x, y)]
-	while(len(queue) > 0):
-		(u, v) = queue[0]
-		queue.pop(0)
-		if(seen[u][v]):
-			continue
-		seen[u][v] = 1
-		newImg[u][v] = 255
-		for i in range(len(du)):
-			nu = u + du[i]
-			nv = v + dv[i]
-			if(nu < 0 or nu >= h or nv < 0 or nv >= w):
-				continue
-			if(seen[nu][nv] == 0 and gray[nu][nv] > 0):
-				queue.append((nu, nv))
-			elif(gray[nu][nv] == 0):
-				edge[u][v] = 255
+		seen = np.zeros((h, w), dtype=np.int32)
 
-normals = []
+		edge = copy.deepcopy(newImg)
 
-dict = {
-	(0, 1, 0, 0, 1, 0, 0, 0, 0): (0, 0, -1),
-	(0, 0, 0, 1, 1, 0, 0, 0, 0): (0, 1, 0),
-	(0, 0, 0, 0, 1, 1, 0, 0, 0): (0, -1, 0),
-	(0, 0, 0, 0, 1, 0, 0, 1, 0): (0, 0, 1),
-	(1, 0, 0, 0, 1, 0, 0, 0, 0): (0, 1, -1),
-	(0, 0, 1, 0, 1, 0, 0, 0, 0): (0, -1, -1),
-	(0, 0, 0, 0, 1, 0, 1, 0, 0): (0, 1, 1),
-	(0, 0, 0, 0, 1, 0, 0, 0, 1): (0, -1, 1),
-	(1, 1, 0, 1, 1, 0, 0, 0, 0): (0, 1, -1),
-	(0, 1, 1, 0, 1, 1, 0, 0, 0): (0, -1, -1),
-	(0, 0, 0, 1, 1, 0, 1, 1, 0): (0, 1, 1),
-	(0, 0, 0, 0, 1, 1, 0, 1, 1): (0, -1, 1),
-	(0, 0, 1, 0, 1, 1, 0, 1, 1): (0, -1, 1),
-	(0, 1, 1, 0, 1, 1, 0, 0, 1): (0, -1, -1),
-	(0, 0, 1, 0, 1, 1, 1, 1, 1): (0, -1, 1),
-	(0, 1, 1, 1, 1, 1, 1, 1, 1): (0, -1, 1),
-	(1, 1, 1, 1, 1, 1, 0, 1, 1): (0, -1, -1),
-	(1, 1, 1, 0, 1, 1, 0, 1, 1): (0, -1, 0),
-	(0, 1, 1, 0, 1, 1, 0, 1, 1): (0, -1, 0),
-	(0, 1, 1, 0, 1, 1, 1, 1, 1): (0, -1, 0),
-	(1, 1, 1, 0, 1, 1, 0, 0, 1): (0, -1, 1),
-	(0, 0, 0, 0, 1, 1, 1, 1, 1): (0, -1, 1),
-	(0, 0, 1, 1, 1, 1, 1, 1, 1): (0, 0, 1),
-	(1, 1, 1, 0, 1, 1, 0, 0, 0): (0, -1, -1),
-	(1, 1, 1, 1, 1, 1, 0, 0, 0): (0, 0, -1),
-	(0, 0, 0, 1, 1, 1, 1, 1, 1): (0, 0, 1),
-	(1, 1, 1, 1, 1, 1, 0, 0, 1): (0, 0, -1),
-	(1, 1, 1, 1, 1, 1, 1, 1, 0): (0, 1, -1),
-	(1, 1, 1, 1, 1, 0, 0, 0, 0): (0, 1, -1),
-	(0, 0, 0, 1, 1, 0, 1, 1, 1): (0, 1, 1),
-	(1, 1, 0, 1, 1, 1, 1, 1, 1): (0, 1, -1),
-	(1, 1, 1, 1, 1, 1, 1, 0, 0): (0, 0, -1),
-	(1, 0, 0, 1, 1, 0, 1, 1, 0): (0, 1, 1),
-	(1, 1, 0, 1, 1, 0, 1, 1, 1): (0, 1, 0),
-	(1, 0, 0, 1, 1, 0, 1, 1, 1): (0, 1, 1),
-	(1, 0, 0, 1, 1, 1, 1, 1, 1): (0, 0, 1),
-	(1, 0, 1, 1, 1, 1, 1, 1, 1): (0, 0, 1),
-	(1, 1, 1, 1, 1, 1, 0, 1, 0): (0, 0, -1),
-	(1, 1, 1, 0, 1, 0, 0, 0, 0): (0, 0, -1),
-	(1, 1, 1, 1, 1, 0, 1, 0, 0): (0, -1, -1),
-	(1, 1, 1, 1, 1, 1, 1, 0, 1): (0, 0, -1),
-	(1, 1, 0, 1, 1, 0, 1, 1, 0): (0, 1, 0),
-	(1, 1, 1, 1, 1, 0, 1, 1, 0): (0, 1, 0),
-	(1, 1, 0, 1, 1, 0, 1, 0, 0): (0, 1, 0),
-	(0, 0, 1, 0, 1, 1, 0, 0, 1): (0, -1, 0)
-}
-lum = []
+		for (x, y) in pt:
+			queue = [(x, y)]
+			while(len(queue) > 0):
+				(u, v) = queue[0]
+				queue.pop(0)
+				if(seen[u][v]):
+					continue
+				seen[u][v] = 1
+				newImg[u][v] = 255
+				for i in range(len(du)):
+					nu = u + du[i]
+					nv = v + dv[i]
+					if(nu < 0 or nu >= h or nv < 0 or nv >= w):
+						continue
+					if(seen[nu][nv] == 0 and gray[nu][nv] > 0):
+						queue.append((nu, nv))
+					elif(gray[nu][nv] == 0):
+						edge[u][v] = 255
 
-for u in range(h):
-	for v in range(w):
-		if(edge[u][v] > 0):
-			number = [0]*9
-			for i in range(len(du)):
-				nu = u + du[i]
-				nv = v + dv[i]
-				if(nu > 0 and nu < h and nv > 0 and nv < w):
-					number[i] = 1 if newImg[nu][nv] > 0 else 0
-			lum.append(realImg[u][v][0]*0.11 + realImg[u][v][1]*0.59 + realImg[u][v][2]*0.3)
-			if(tuple(number) in dict.keys()):
-				normals.append((dict[tuple(number)])/np.linalg.norm(dict[tuple(number)]))
-			else:
-				alpha = np.random.rand(1)*2*math.pi
-				normals.append((0, math.cos(alpha), math.sin(alpha)))
+		normals = []
 
-lum = np.array(lum)
-normals = np.array(normals)
-omegaj = contourVoting(lum, normals, 3)
-andImg = copy.deepcopy(newImg[:])
-andImg[andImg > 0] = 1
-andImg = gray*andImg
+		dict = {
+			(0, 1, 0, 0, 1, 0, 0, 0, 0): (0, 0, -1),
+			(0, 0, 0, 1, 1, 0, 0, 0, 0): (0, 1, 0),
+			(0, 0, 0, 0, 1, 1, 0, 0, 0): (0, -1, 0),
+			(0, 0, 0, 0, 1, 0, 0, 1, 0): (0, 0, 1),
+			(1, 0, 0, 0, 1, 0, 0, 0, 0): (0, 1, -1),
+			(0, 0, 1, 0, 1, 0, 0, 0, 0): (0, -1, -1),
+			(0, 0, 0, 0, 1, 0, 1, 0, 0): (0, 1, 1),
+			(0, 0, 0, 0, 1, 0, 0, 0, 1): (0, -1, 1),
+			(1, 1, 0, 1, 1, 0, 0, 0, 0): (0, 1, -1),
+			(0, 1, 1, 0, 1, 1, 0, 0, 0): (0, -1, -1),
+			(0, 0, 0, 1, 1, 0, 1, 1, 0): (0, 1, 1),
+			(0, 0, 0, 0, 1, 1, 0, 1, 1): (0, -1, 1),
+			(0, 0, 1, 0, 1, 1, 0, 1, 1): (0, -1, 1),
+			(0, 1, 1, 0, 1, 1, 0, 0, 1): (0, -1, -1),
+			(0, 0, 1, 0, 1, 1, 1, 1, 1): (0, -1, 1),
+			(0, 1, 1, 1, 1, 1, 1, 1, 1): (0, -1, 1),
+			(1, 1, 1, 1, 1, 1, 0, 1, 1): (0, -1, -1),
+			(1, 1, 1, 0, 1, 1, 0, 1, 1): (0, -1, 0),
+			(0, 1, 1, 0, 1, 1, 0, 1, 1): (0, -1, 0),
+			(0, 1, 1, 0, 1, 1, 1, 1, 1): (0, -1, 0),
+			(1, 1, 1, 0, 1, 1, 0, 0, 1): (0, -1, 1),
+			(0, 0, 0, 0, 1, 1, 1, 1, 1): (0, -1, 1),
+			(0, 0, 1, 1, 1, 1, 1, 1, 1): (0, 0, 1),
+			(1, 1, 1, 0, 1, 1, 0, 0, 0): (0, -1, -1),
+			(1, 1, 1, 1, 1, 1, 0, 0, 0): (0, 0, -1),
+			(0, 0, 0, 1, 1, 1, 1, 1, 1): (0, 0, 1),
+			(1, 1, 1, 1, 1, 1, 0, 0, 1): (0, 0, -1),
+			(1, 1, 1, 1, 1, 1, 1, 1, 0): (0, 1, -1),
+			(1, 1, 1, 1, 1, 0, 0, 0, 0): (0, 1, -1),
+			(0, 0, 0, 1, 1, 0, 1, 1, 1): (0, 1, 1),
+			(1, 1, 0, 1, 1, 1, 1, 1, 1): (0, 1, -1),
+			(1, 1, 1, 1, 1, 1, 1, 0, 0): (0, 0, -1),
+			(1, 0, 0, 1, 1, 0, 1, 1, 0): (0, 1, 1),
+			(1, 1, 0, 1, 1, 0, 1, 1, 1): (0, 1, 0),
+			(1, 0, 0, 1, 1, 0, 1, 1, 1): (0, 1, 1),
+			(1, 0, 0, 1, 1, 1, 1, 1, 1): (0, 0, 1),
+			(1, 0, 1, 1, 1, 1, 1, 1, 1): (0, 0, 1),
+			(1, 1, 1, 1, 1, 1, 0, 1, 0): (0, 0, -1),
+			(1, 1, 1, 0, 1, 0, 0, 0, 0): (0, 0, -1),
+			(1, 1, 1, 1, 1, 0, 1, 0, 0): (0, -1, -1),
+			(1, 1, 1, 1, 1, 1, 1, 0, 1): (0, 0, -1),
+			(1, 1, 0, 1, 1, 0, 1, 1, 0): (0, 1, 0),
+			(1, 1, 1, 1, 1, 0, 1, 1, 0): (0, 1, 0),
+			(1, 1, 0, 1, 1, 0, 1, 0, 0): (0, 1, 0),
+			(0, 0, 1, 0, 1, 1, 0, 0, 1): (0, -1, 0)
+		}
+		lum = []
 
-zenithAngles = []
+		for u in range(h):
+			for v in range(w):
+				if(edge[u][v] > 0):
+					number = [0]*9
+					for i in range(len(du)):
+						nu = u + du[i]
+						nv = v + dv[i]
+						if(nu > 0 and nu < h and nv > 0 and nv < w):
+							number[i] = 1 if newImg[nu][nv] > 0 else 0
+					lum.append(realImg[u][v][0]*0.11 + realImg[u][v][1]*0.59 + realImg[u][v][2]*0.3)
+					if(tuple(number) in dict.keys()):
+						normals.append((dict[tuple(number)])/np.linalg.norm(dict[tuple(number)]))
+					else:
+						alpha = np.random.rand(1)*2*math.pi
+						normals.append((0, math.cos(alpha), math.sin(alpha)))
 
-for azimuth in omegaj:
-	zenith = findZenithAngle(azimuth, andImg, h, w)
-	zenithAngles.append(zenith)
+		lum = np.array(lum)
+		normals = np.array(normals)
+		omegaj = contourVoting(lum, normals, 3)
+		andImg = copy.deepcopy(newImg[:])
+		andImg[andImg > 0] = 1
+		andImg = gray*andImg
 
-omegaAngles = [180.0/math.pi*x for x in omegaj]
+		zenithAngles = []
 
-print(omegaAngles, zenithAngles)
+		for azimuth in omegaj:
+			zenith = findZenithAngle(azimuth, andImg, h, w)
+			zenithAngles.append(zenith)
 
-#plt.imshow(realImg), plt.show()
-cv2.imshow("name", andImg), cv2.waitKey(0), cv2.destroyAllWindows()
+		omegaAngles = [180.0/math.pi*x for x in omegaj]
+
+		print(omegaAngles, zenithAngles)
+
+		#plt.imshow(realImg), plt.show()
+		cv2.imshow("name", andImg), cv2.waitKey(0), cv2.destroyAllWindows()
+
+size = (realImg.shape[1], realImg.shape[0])
+cv2.namedWindow('image', cv2.WINDOW_NORMAL)
+cv2.resizeWindow('image', size[0], size[1])
+cv2.setMouseCallback('image', mouse_callback)
+cv2.imshow('image', realImg)
+while 1:
+    k = cv2.waitKey(0)
+
+    if k == 27:
+        cv2.destroyAllWindows()
+        break
