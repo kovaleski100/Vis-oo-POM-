@@ -24,7 +24,7 @@ def contourVoting(luminances, normals, N):
 			running = False
 			for j in range(N):
 				wj = np.array([0, math.sin(phij[j]), math.cos(phij[j])])
-				alphaij = luminances[i]*max(0, np.dot(normals[i], wj))/omegaAcc + EPS
+				alphaij = luminances[i]*max(0, np.dot(normals[i], wj))/omegaAcc
 				lastphij = phij[j]
 				phij[j] = alphaAcc[j]*phij[j] + alphaij*azimuth[i]
 				alphaAcc[j] = alphaAcc[j] + alphaij
@@ -35,7 +35,7 @@ def contourVoting(luminances, normals, N):
 
 realImg = cv2.imread('a.png')
 h, w = realImg.shape[:2]
-lum = np.array([pixel[0]*0.3 + pixel[1]*0.59 + pixel[2]*0.11 for row in realImg for pixel in row])
+
 '''img = cv2.imread('a.png')
 mask = np.zeros(img.shape[:2],np.uint8)
 
@@ -126,6 +126,7 @@ dict = {
 	(1, 1, 1, 1, 1, 0, 1, 1, 0): (0, 1, 0),
 	(1, 1, 0, 1, 1, 0, 1, 0, 0): (0, 1, 0)
 }
+lum = []
 
 for u in range(h):
 	for v in range(w):
@@ -135,8 +136,10 @@ for u in range(h):
 				nu = u + du[i]
 				nv = v + dv[i]
 				number[i] = 1 if newImg[nu][nv] > 0 else 0
+			lum.append(realImg[u][v][0]*0.11 + realImg[u][v][1]*0.59 + realImg[u][v][2]*0.3)
 			normals.append(dict[tuple(number)])
 
+lum = np.array(lum)
 normals = np.array(normals)
 ans = contourVoting(lum, normals, 3)
 
